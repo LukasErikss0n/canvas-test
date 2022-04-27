@@ -1,12 +1,11 @@
 const canvas = document.querySelector("canvas");
 const context = canvas.getContext("2d");
-console.log(context); // kan se alla atribut till canvasen, glöm ej att ta bort
 
 canvas.width = 1000;
 canvas.height = 400;
 
 const gravity = 0.2;
-class Player {
+class Cube {
   constructor() {
     this.height = 50;
     this.width = 50;
@@ -20,13 +19,13 @@ class Player {
       y: 1,
     };
   }
-  playerDraw() {
+  cubeDraw() {
     context.fillStyle = "green";
     context.fillRect(this.position.x, this.position.y, this.width, this.height);
   }
 
-  updatePos() {
-    this.playerDraw();
+  cubeJump() {
+    this.cubeDraw();
     this.position.y += this.velocity.y;
     if (this.position.y + this.height + this.velocity.y <= canvas.height) {
       this.velocity.y += gravity;
@@ -36,13 +35,13 @@ class Player {
   }
 }
 
-class Obsticals {
-  constructor() {
-    this.width = 600;
-    this.height = 80;
+class Obstacles {
+  constructor({ x, height, width }) {
+    this.width = width;
+    this.height = height;
 
     this.position = {
-      x: 400,
+      x: x,
       y: canvas.height - this.height,
     };
     this.acceleration = {
@@ -55,51 +54,57 @@ class Obsticals {
     };
   }
 
-  obsticalDraw() {
-    context.fillStyle = "black";
+  obstaclesDraw() {
+    context.fillStyle = "darkblue";
     context.fillRect(this.position.x, this.position.y, this.width, this.height);
   }
-  updateObstical() {
-    this.obsticalDraw();
+  moveObstical() {
+    this.obstaclesDraw();
     this.position.x -= this.acceleration.x;
     this.acceleration.x += this.speed.x;
   }
 }
 
-const player = new Player();
-const obstical = new Obsticals();
+const cube = new Cube();
+const obsticals = [
+  new Obstacles({ x: 200, height: 50, width: 100 }),
+  new Obstacles({ x: 1000, height: 50, width: 200 }),
+];
 
 function animation() {
   requestAnimationFrame(animation);
   context.clearRect(0, 0, canvas.width, canvas.height);
-  player.updatePos();
-  obstical.updateObstical(); // ändra sen till updateObstical
+  cube.cubeJump();
+  obsticals.forEach(function (obstical) {
+    obstical.moveObstical();
+  });
 
   //crash detection
-  if (
-    player.position.y + player.height <= obstical.position.y &&
-    player.position.y + player.height + player.velocity.y >=
-      obstical.position.y &&
-    player.position.x + player.width >= obstical.position.x &&
-    player.position.x <= obstical.position.x + obstical.width
-  ) {
-    player.velocity.y = 0; // ändra till att man dör vid nud istället för att åka på objekt
-    console.log("Nuddade topen av blocket");
-  } else if (
-    player.position.x + player.width >= obstical.position.x &&
-    player.position.y + player.velocity.y >= obstical.position.y
-  ) {
-    console.log("nudd frånt");
-    obstical.acceleration.x = 0; //ändra till att man dör vid nud istället för att åka på objekt
-  }
+  obsticals.forEach(function (obstical) {
+    if (
+      cube.position.y + cube.height <= obstical.position.y &&
+      cube.position.y + cube.height + cube.velocity.y >= obstical.position.y &&
+      cube.position.x + cube.width >= obstical.position.x &&
+      cube.position.x <= obstical.position.x + obstical.width
+    ) {
+      cube.velocity.y = 0; // ändra till att man dör vid nud istället för att åka på objekt
+      console.log("Nuddade topen av blocket");
+    } else if (
+      cube.position.x + cube.width >= obstical.position.x &&
+      cube.position.y + cube.velocity.y >= obstical.position.y
+    ) {
+      console.log("nudd frånt");
+      obstical.acceleration.x = 0; //ändra till att man dör vid nud istället för att åka på objekt
+    }
+  });
 }
 
 animation();
 
 window.addEventListener("keydown", function (event) {
   if (event.key === " ") {
-    if (player.velocity.y == 0) {
-      player.velocity.y -= 8;
+    if (cube.velocity.y == 0) {
+      cube.velocity.y -= 8;
     }
   }
 });
